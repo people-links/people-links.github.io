@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>خريطة ذهنية تلقائية</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --radius: 40px;
+    }
+
+    body {
+      margin: 0;
+      direction: rtl;
+      font-family: sans-serif;
+    }
+    svg {
+      width: 2000px;
+      height: 2000px;
+    }
+    image {
+      clip-path: circle(var(--radius) at center);
+    }
+  </style>
+</head>
+<body>
+<svg id="mindmap"></svg>
+
+<script>
+  let radius = 40;
+  let border = 30;
+  let borderColor = "lightblue";
+  let linkColor = "#aaa";
+
+  document.documentElement.style.setProperty("--radius", `${radius}px`);
+
+  const nodes = [
+    { id: "أبوزيد", name: "أحمد أبوزيد", img: "https://i1.sndcdn.com/artworks-FU5y13F6Ll9XYlyv-ZzJgTg-t500x500.jpg" },
+    { id: "أمير", name: "أمير منير", img: "https://www.marefa.org/w/images/4/48/%D8%A3%D9%85%D9%8A%D8%B1_%D9%85%D9%86%D9%8A%D8%B1.jpg" },
+    { id: "حازم شومان", name: "حازم شومان", img: "https://m.media-amazon.com/images/I/41W8JBzxUsL.jpg" },
+    { id: "الدلو", name: "ياسر ممدوح", img: "https://yt3.googleusercontent.com/ytc/AIdro_nL9psk0shZuYK2svmpoIK2EhTtmHo4m5xfUHnt24rryxo=s900-c-k-c0x00ffffff-no-rj" },
+    { id: "بحر العلم", name: "محمد الغليظ", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJy8kZHJtfzUQaF9nzw8eGKbSkDxD7uYMI_kvZg-bn0dX2uC1RV1D5qYCq&s=10" },
+    { id: "الساخر", name: "إبراهيم إمام", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTobg48lbKunVaxMgXgOgQQLOSkrwlzL5nqiUepZf_N-Q3gk7PaR4NdEYNU&s=10" },
+    { id: "إبراهيم عبد الغني", name: "إبراهيم عبد الغني", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7sYKbG-vqgTIsqLSi8rmORbPHNhOlQ_GDQw&usqp=CAU" },
+    { id: "حسام مصطفى", name: "حسام مصطفى", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTpoKv3a4A3XuIcBQc7GrzWFdcGyd_zFRh8SpAMjt9HTwC0GSCMAD3E9cY&s=10" },
+    { id: "شاهين", name: "أحمد شاهين", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKcsjc-qF2ho5ANHa10w0qVRMdxnwB4ILlsg&usqp=CAU" },
+    { id: "العلاوي", name: "عبدالله العلاوي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZSKFu8Y7H2cv0FNUhCqMSeB4s6ZNHxdwsH-3huWAn5vo2q_JqHJoEY80&s=10" },
+    { id: "حازم الصديق", name: "حازم الصديق", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZV_Fs_OQqlly3Cflm6Z904QmsfB8YYYhNdOtkyjEerXe4DgNxs6RHhG5B&s=10" },
+    { id: "شريف علي", name: "شريف علي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQE6wKfwX2vht7LHjoHk5prNDWNDt-H3nYTwQ&usqp=CAU" },
+    { id: "أحمد عامر", name: "أحمد عامر", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsCB77tlKZpX59eR9hJdL55oxpX2bGvLjc5A&usqp=CAU" },
+    { id: "عمرو حسن", name: "عمرو حسن", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTf8ZrNFsEGNBnADsIiRmORZ4ZJzzg1GkRGdjNJYr5AMssCFKt0ftKHgUBw&s=10" },
+    { id: "هيثم طلعت", name: "هيثم طلعت", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4A_gP0PCLkMxoKK9wgEUlh8ytEWXQtahwvQ&usqp=CAU" },
+    { id: "أبو ريحانة", name: "محمد أبو ريحانة", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdNTgx_fOYE0QynmjdrEK5baepd-L4I2DpFu5kn_odcUnH2SXDQS9YgW4&s=10" },
+    { id: "فاهم", name: "هلال السيد", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmdm0sqEXtWDQbu0PczwTUdIDyG7i-gIiddA&usqp=CAU" },
+    { id: "أحمد العربي", name: "أحمد العربي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiWzDd5k7eEG1QwSOkEjDLe0v9mxXrXaDA6g&usqp=CAU" },
+    { id: "نبيل العوضي", name: "نبيل العوضي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZAqf9BoMSc75Q9I6ve9k6RvD_rlABzWNAaU8EaFOPuB1rzzQ-NVsmkjs&s=10" },
+    { id: "أمجد سمير", name: "أمجد سمير", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa5vHd2ifIzp24oNOYiGW46Pkrd3npyHmYWTyDFVuI649_zu6Zqdxf2tlj&s=10" },
+    { id: "محمد جودة", name: "محمد جودة", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTeDdUAx_fcrnefKagC7iGCRQF1FaU89UFbscfVKDxL_UayqdJVuqtvguaU&s=10" },
+    { id: "شريف يونس", name: "شريف طه يونس", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsk6R9CcTTVj2q_oVbGt2hOXFtCkrzI6OINcL8ssoni0VNDk8rjq3bJi4&s=10" },
+    { id: "علي محمد علي", name: "علي محمد علي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3u8bqajbmRKEuLAb8pZTk3Wac6EET9MLIwU2fPInqBQ3iLSw_RAg-gMk&s=10" },
+    { id: "تاريخستان", name: "عماد الدين علي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_8jKvyr21G0jOwwnSCKH_elPjtu_Y5p43DA&usqp=CAU" },
+    { id: "التاعب", name: "محمد شاهين التاعب", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE5PWdw-ttfyryH6g9VS4jmkjZmJjTtAIX7GT1YTZatT5mmxN0WpvFvc8&s=10" },
+    { id: "أبو الأداهيم", name: "أدهم إبراهيم", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlsbuqHMx57p9Vov4tMmkxdobtMuHYYF0JXeWV-HGc3vG1Q4oGD_k0KhE&s=10" },
+    { id: "كريم إسماعيل", name: "كريم إسماعيل", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxLgJ6hHR_w2gYgIluvPzRVBO7u4uJq7oT8zS9lyo6LSRWYED3lR1zSZI&s=10" },
+    { id: "أحمد العزب", name: "أحمد العزب", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRm8b5gPLCC6QC6wvwK1Kn0Z-ysqSstUCOAJw&s" },
+    { id: "علاء حامد", name: "علاء حامد", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLsLHDU9y6x7mynrJ1JKx639PyhY-HyXxi909Xs8grY99fqD2HzUE2klw&s=10" },
+    { id: "أحمد فتحي", name: "أحمد فتحي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnfiqdBn74H8NGX9I1X8RlDHdcHbR-7lxtU3gEkkZZg_jEuzmSCZdFlBL-&s=10" },
+    { id: "غريب الشيخ", name: "غريب الشيخ", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJUJoSxK3fEg5I4uKfFSIlbLaU9x-wH9NVE9tv_zjZzsnJwv9Yj6jXcro_&s=10" },
+    { id: "أبوسريع", name: "محمد أبوسريع", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5tZsQlG45u4DeWVysw-RPidW312kObDUv7kjsp9YP41c2M5PEUupqO-j1&s=10" },
+    { id: "حسن الحسيني", name: "حسن الحسيني", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUnNhImhFDLjePzDfJuCPcB5u7DfXftqtwN0Gu4HVI3BMpTSo_Rb94Khg&s=10" },
+    { id: "محمود داوود", name: "محمود داوود", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqlkNBpoy2nrOFp2tAcMzspmd43Z4JFQrAHv5O9yi0OnI9tDGDyq4HHuzM&s=10" },
+    { id: "خالد النجار", name: "خالد النجار", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGRnDw06HgRDxPEFYAIwy5uxz2rEuqCXNZaK2-GrVnNVAoi7p0C9fwS2Y&s=10" },
+    { id: "ذاكر نايك", name: "ذاكر نايك", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQo4mDKyTZveWxylDO2PLvoIlEhLu68IvDabA&usqp=CAU" },
+    { id: "محمود المصري", name: "محمود المصري", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTH60GS9fCGsf_P6PwCXkUnmjTkritUqcKnLKoQEXJ9Vfp_Dkg17qEiIfE&s=10" },
+    { id: "أحمد السيد", name: "أحمد السيد", img: "https://ahmadalsayed.net/homepage/profile.png" },
+    { id: "محمد العريفي", name: "محمد العريفي", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT643q5QifgMwUic2yByJo49xfo2hUaipqozQ&s" },
+  ];
+
+  // العلاقات كنص باستخدام IDs مباشرة
+  const linkText = `
+    أبوزيد - أمير
+    أبوزيد - شاهين
+    أبوزيد - العلاوي
+    أبوزيد - حازم الصديق
+    أبوزيد - أبوسريع
+    حازم الصديق - شاهين
+    حازم الصديق - شريف علي
+    حازم الصديق - أحمد عامر
+    شاهين - أحمد عامر
+    شاهين - أمير
+    شريف علي - أحمد عامر
+    شريف علي - شاهين
+    أمير - حازم شومان
+    أمير - الدلو
+    الدلو - حازم شومان
+    بحر العلم - أمير
+    بحر العلم - الدلو
+    بحر العلم - حازم شومان
+    الساخر - حازم شومان
+    الساخر - إبراهيم عبد الغني
+    إبراهيم عبد الغني - حسام مصطفى
+    حسام مصطفى - عمرو حسن
+    حسام مصطفى - الساخر
+    حسام مصطفى - هيثم طلعت
+    حسام مصطفى - التاعب
+    الساخر - هيثم طلعت
+    أبو ريحانة - حازم شومان
+    فاهم - هيثم طلعت
+    فاهم - حازم شومان
+    فاهم - أحمد العربي
+    فاهم - أمجد سمير
+    فاهم - شريف يونس
+    فاهم - علي محمد علي
+    فاهم - تاريخستان
+    فاهم - بحر العلم
+    فاهم - التاعب
+    فاهم - أبوسريع
+    فاهم - أحمد فتحي
+    أحمد فتحي - أبوسريع
+    غريب الشيخ - أحمد فتحي
+    غريب الشيخ - أبوزيد
+    أبوزيد - علي محمد علي
+    حازم الصديق - علي محمد علي
+    حازم الصديق - بحر العلم
+    أحمد العربي - نبيل العوضي
+    فاهم - محمد جودة
+    الساخر - محمد جودة
+    شاهين - تاريخستان
+    أبو الأداهيم - أمير
+    أبو الأداهيم - شاهين
+    كريم إسماعيل - شاهين
+    كريم إسماعيل - أبوزيد
+    كريم إسماعيل - حازم الصديق
+    أحمد العزب - حازم شومان
+    أحمد العزب - علاء حامد
+    حسن الحسيني - محمود داوود
+    حسن الحسيني - خالد النجار
+    حسن الحسيني - ذاكر نايك
+    حسن الحسيني - محمود المصري
+    حسن الحسيني - محمد العريفي
+    خالد النجار - أحمد السيد
+  `;
+
+  const links = linkText.trim().split("\n").map(line => {
+    const [from, to] = line.split("-").map(s => s.trim());
+    return {
+      source: from,
+      target: to
+    };
+  });
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const svg = d3.select("svg");
+
+  const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(radius*4.5  ))
+    .force("charge", d3.forceManyBody().strength(-500))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("x", d3.forceX(width / 2).strength(0.1))
+    .force("y", d3.forceY(height / 2).strength(0.05));
+
+  const link = svg.selectAll("line")
+    .data(links)
+    .enter()
+    .append("line")
+    .attr("stroke", linkColor)
+    .attr("stroke-width", 1.5);
+
+  const nodeGroup = svg.selectAll(".node")
+    .data(nodes)
+    .enter()
+    .append("g")
+    .attr("class", "node")
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended)
+    );
+
+  nodeGroup.append("circle")
+    .attr("r", border)
+    .attr("fill", borderColor);
+
+  nodeGroup.append("image")
+    .attr("width", radius * 2)
+    .attr("height", radius * 2)
+    .attr("x", -radius)
+    .attr("y", -radius)
+    .attr("href", d => d.img);
+
+  nodeGroup.append("text")
+    .attr("y", radius+20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "14px")
+    .text(d => d.name);
+
+  simulation.on("tick", () => {
+    link
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+
+    nodeGroup
+      .attr("transform", d => `translate(${d.x}, ${d.y})`);
+  });
+
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+
+  // ======= تمييز المسار بين عقدتين ==========
+  const linkMap = {};
+  links.forEach(link => {
+    if (!linkMap[link.source]) linkMap[link.source] = [];
+    if (!linkMap[link.target]) linkMap[link.target] = [];
+    linkMap[link.source].push({ node: link.target, link });
+    linkMap[link.target].push({ node: link.source, link });
+  });
+
+  function highlightPath(startId, endId) {
+    const queue = [{ id: startId, path: [] }];
+    const visited = new Set();
+
+    while (queue.length > 0) {
+      const { id, path } = queue.shift();
+      if (id === endId) {
+        link
+          .attr("stroke", d =>
+            path.some(p => (p.source.id === d.source.id && p.target.id === d.target.id) ||
+                           (p.source.id === d.target.id && p.target.id === d.source.id))
+              ? "orange" : "#aaa"
+          )
+          .attr("stroke-width", d =>
+            path.some(p => (p.source.id === d.source.id && p.target.id === d.target.id) ||
+                           (p.source.id === d.target.id && p.target.id === d.source.id))
+              ? 4 : 1.5
+          );
+        return;
+      }
+
+      if (visited.has(id)) continue;
+      visited.add(id);
+
+      for (const neighbor of linkMap[id] || []) {
+        if (!visited.has(neighbor.node)) {
+          queue.push({
+            id: neighbor.node,
+            path: [...path, neighbor.link]
+          });
+        }
+      }
+    }
+
+    alert("لا يوجد طريق بين النقطتين.");
+  }
+
+  let selectedNodes = [];
+  nodeGroup.on("click", (event, d) => {
+    selectedNodes.push(d.id);
+    if (selectedNodes.length === 2) {
+      highlightPath(selectedNodes[0], selectedNodes[1]);
+      selectedNodes = [];
+    }
+  });
+</script>
+</body>
+</html>
